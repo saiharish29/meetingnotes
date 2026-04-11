@@ -1,0 +1,237 @@
+import { marked } from 'marked';
+
+export function generateHtmlReport(title: string, report: string, dateStr: string): string {
+  // Configure marked for clean output
+  marked.setOptions({ gfm: true, breaks: false });
+
+  const bodyHtml = marked.parse(report) as string;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>${escapeHtml(title)}</title>
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #1e293b;
+    background: #ffffff;
+    padding: 0;
+  }
+
+  /* ── Outer wrapper (print-safe) ── */
+  .document {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 56px 64px;
+  }
+
+  /* ── Header banner ── */
+  .doc-header {
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+    color: #ffffff;
+    border-radius: 12px 12px 0 0;
+    padding: 32px 40px 28px;
+    margin-bottom: 0;
+  }
+  .doc-header .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    margin-bottom: 6px;
+  }
+  .doc-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .doc-header .meta {
+    font-size: 12px;
+    opacity: 0.7;
+  }
+
+  /* ── Body card ── */
+  .doc-body {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 40px 40px 48px;
+  }
+
+  /* ── Section: H2 (numbered top-level) ── */
+  h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-top: 36px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #4f46e5;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2:first-of-type { margin-top: 0; }
+
+  /* ── Sub-section: H3 ── */
+  h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #4f46e5;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 28px;
+    margin-bottom: 10px;
+    padding: 6px 12px;
+    background: #eef2ff;
+    border-left: 3px solid #4f46e5;
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* ── Paragraphs ── */
+  p {
+    color: #334155;
+    margin-bottom: 12px;
+    font-size: 13.5px;
+  }
+
+  /* ── Lists ── */
+  ul, ol {
+    padding-left: 20px;
+    margin-bottom: 12px;
+  }
+  li {
+    color: #334155;
+    font-size: 13.5px;
+    margin-bottom: 5px;
+    line-height: 1.6;
+  }
+  li::marker { color: #4f46e5; }
+
+  /* ── Strong / bold ── */
+  strong {
+    color: #1e293b;
+    font-weight: 600;
+  }
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 20px;
+    font-size: 13px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px #e2e8f0;
+  }
+  thead {
+    background: #4f46e5;
+    color: #ffffff;
+  }
+  thead th {
+    padding: 11px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.1s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  tbody tr:hover { background: #eef2ff; }
+  td {
+    padding: 10px 14px;
+    color: #334155;
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  td:first-child { font-weight: 500; color: #1e293b; }
+
+  /* ── Horizontal rule ── */
+  hr {
+    border: none;
+    border-top: 1px solid #e2e8f0;
+    margin: 24px 0;
+  }
+
+  /* ── Footer ── */
+  .doc-footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #94a3b8;
+  }
+  .doc-footer .badge {
+    background: #eef2ff;
+    color: #4f46e5;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 10.5px;
+  }
+
+  /* ── Severity badges in tables ── */
+  td:has-text("High"), td.severity-high { color: #dc2626; font-weight: 600; }
+  td:has-text("Medium"), td.severity-medium { color: #d97706; font-weight: 600; }
+  td:has-text("Low"), td.severity-low { color: #16a34a; font-weight: 600; }
+
+  /* ── Print ── */
+  @media print {
+    body { padding: 0; }
+    .document { max-width: 100%; padding: 0; }
+    .doc-header { border-radius: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .doc-body { border: none; border-radius: 0; padding: 24px 0; }
+    thead { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    h2 { page-break-after: avoid; }
+    h3 { page-break-after: avoid; }
+    tr { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="document">
+
+  <div class="doc-header">
+    <div class="label">Meeting Notes</div>
+    <h1>${escapeHtml(title)}</h1>
+    <div class="meta">Generated on ${dateStr} &nbsp;·&nbsp; Confidential</div>
+  </div>
+
+  <div class="doc-body">
+    ${bodyHtml}
+
+    <div class="doc-footer">
+      <span>Generated by Meeting Notes Generator</span>
+      <span class="badge">AI-assisted · Review before sending</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>`;
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
