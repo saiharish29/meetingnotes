@@ -20,13 +20,14 @@ describe('buildNotesPrompt', () => {
 
   it('instructs the model to output all required sections', () => {
     const prompt = buildNotesPrompt('transcript', 'Meeting');
-    expect(prompt).toContain('## Meeting Summary');
-    expect(prompt).toContain('## Attendees');
-    expect(prompt).toContain('## Key Decisions');
-    expect(prompt).toContain('## Action Items');
-    expect(prompt).toContain('## Discussion Topics');
-    expect(prompt).toContain('## Next Steps');
-    expect(prompt).toContain('## Open Questions / Parking Lot');
+    expect(prompt).toContain('## 1. Executive Summary');
+    expect(prompt).toContain('### 2.1 Topics Discussed');
+    expect(prompt).toContain('### 2.2 Key Discussion Points');
+    expect(prompt).toContain('### 2.3 Decisions');
+    expect(prompt).toContain('### 2.4 Action Items');
+    expect(prompt).toContain('### 2.5 Risks / Issues');
+    expect(prompt).toContain('### 2.6 Follow-ups Needed');
+    expect(prompt).toContain('### 2.7 Open Questions');
   });
 
   it('instructs the model not to invent information', () => {
@@ -39,8 +40,18 @@ describe('buildNotesPrompt', () => {
     expect(prompt).toContain('[HH:MM:SS]');
   });
 
-  it('requests a markdown table for action items', () => {
+  it('requests a markdown table for action items with Notes column', () => {
     const prompt = buildNotesPrompt('transcript', 'Meeting');
-    expect(prompt).toContain('| Task | Owner | Due Date |');
+    expect(prompt).toContain('| Task | Owner | Due Date | Notes |');
+  });
+
+  it('requests a Risks table with Severity and Mitigation columns', () => {
+    const prompt = buildNotesPrompt('transcript', 'Meeting');
+    expect(prompt).toContain('| Risk | Impact | Severity | Mitigation |');
+  });
+
+  it('requests a Decisions table with Context and Effective Date columns', () => {
+    const prompt = buildNotesPrompt('transcript', 'Meeting');
+    expect(prompt).toContain('| Decision | Owner | Context | Effective Date |');
   });
 });
