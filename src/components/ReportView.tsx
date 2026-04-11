@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { generateHtmlReport } from '../utils/htmlExport';
 
 interface ReportViewProps {
   report: string;
@@ -40,6 +41,17 @@ export default function ReportView({ report, meetingTitle, onReset }: ReportView
     URL.revokeObjectURL(url);
   }
 
+  function downloadHtml() {
+    const html = generateHtmlReport(title, report, dateStr);
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title.replace(/\s+/g, '-').toLowerCase()}-notes.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="min-h-screen bg-surface-50 flex flex-col">
       {/* Nav */}
@@ -54,7 +66,18 @@ export default function ReportView({ report, meetingTitle, onReset }: ReportView
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Export buttons */}
+          {/* HTML export — primary action */}
+          <button
+            onClick={downloadHtml}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Download HTML
+          </button>
+
+          {/* Secondary exports */}
           <button
             onClick={copyMarkdown}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-surface-600 hover:bg-surface-100 transition-colors border border-surface-200"
